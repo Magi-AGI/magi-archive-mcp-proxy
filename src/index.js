@@ -29,13 +29,21 @@ export default {
     // Clone headers
     const backendHeaders = new Headers(request.headers);
 
-    // Add identifying header
+    // Set correct Host header for backend (required by HostAuthorization middleware)
+    const backendHost = new URL(backendUrl).host;
+    backendHeaders.set('Host', backendHost);
+
+    // Add identifying headers
     backendHeaders.set('X-Forwarded-By', 'cloudflare-mcp-proxy');
     backendHeaders.set('X-Forwarded-For', request.headers.get('CF-Connecting-IP') || '');
+    backendHeaders.set('X-Original-Host', request.headers.get('Host') || '');
 
     // Forward request to backend
     let backendResponse;
     try {
+      console.log(`[PROXY] ${request.method} ${url.pathname} -> ${backendRequestUrl}`);
+      console.log(`[PROXY] Host header being sent: ${backendHeaders.get('Host')}`);
+
       backendResponse = await fetch(backendRequestUrl, {
         method: request.method,
         headers: backendHeaders,
@@ -43,8 +51,16 @@ export default {
         // Don't auto-redirect, let Claude handle it
         redirect: 'manual',
       });
+
+      console.log(`[BACKEND] Status: ${backendResponse.status}, Content-Type: ${backendResponse.headers.get('Content-Type')}`);
+
+      // Log 403 error details
+      if (backendResponse.status === 403) {
+        const errorText = await backendResponse.clone().text();
+        console.log(`[BACKEND] 403 Error: ${errorText.substring(0, 200)}`);
+      }
     } catch (error) {
-      console.error('Backend request failed:', error);
+      console.error('[ERROR] Backend request failed:', error);
       return new Response(JSON.stringify({
         jsonrpc: '2.0',
         id: null,

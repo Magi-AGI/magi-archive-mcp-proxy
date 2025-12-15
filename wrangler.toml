@@ -8,4 +8,4 @@ compatibility_date = "2024-12-15"
 # ]
 
 [vars]
-BACKEND_URL = "https://mcp.magi-agi.org"
+BACKEND_URL = "http://mcp.magi-agi.org"
