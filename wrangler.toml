@@ -1,0 +1,11 @@
+name = "magi-archive-mcp-proxy"
+main = "src/index.js"
+compatibility_date = "2024-12-15"
+
+# KV namespace for OAuth state (will be created)
+# kv_namespaces = [
+#   { binding = "OAUTH_STATE", id = "your-kv-id-here" }
+# ]
+
+[vars]
+BACKEND_URL = "https://mcp.magi-agi.org"
